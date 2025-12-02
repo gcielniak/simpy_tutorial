@@ -35,6 +35,8 @@ class Statistics:
     wait_times: list = field(default_factory=list)
     queue_lengths: list = field(default_factory=list)
     queue_times: list = field(default_factory=list)
+    utilization_times: list = field(default_factory=list)
+    utilization_values: list = field(default_factory=list)
 
 
 class QueueSimulation:
@@ -106,6 +108,21 @@ class QueueSimulation:
             yield self.env.timeout(interval)
             queue_length = len(self.servers.queue)
             self.stats.queue_lengths.append((self.env.now, queue_length))
+    
+    def monitor_utilization(self, interval: float = 0.1):
+        """
+        Periodically monitor and record server utilization.
+        
+        Args:
+            interval: Time between monitoring events
+        """
+        while True:
+            # Calculate utilization: number of busy servers / total servers
+            busy_servers = self.servers.count
+            utilization = busy_servers / self.config.num_servers
+            self.stats.utilization_times.append(self.env.now)
+            self.stats.utilization_values.append(utilization)
+            yield self.env.timeout(interval)
 
 
 def run_simulation(config: SimulationConfig) -> tuple:
@@ -128,6 +145,7 @@ def run_simulation(config: SimulationConfig) -> tuple:
     # Start processes
     env.process(simulation.customer_arrivals())
     env.process(simulation.monitor_queue())
+    env.process(simulation.monitor_utilization())
     
     # Run simulation
     env.run(until=config.simulation_time)
@@ -174,7 +192,7 @@ def visualize_results(stats: Statistics, config: SimulationConfig,
         metrics: Calculated metrics dictionary
         output_file: Path to save the visualization image
     """
-    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+    fig, axes = plt.subplots(3, 2, figsize=(14, 14))
     fig.suptitle(f'Single Queue, {config.num_servers} Servers Simulation Results',
                  fontsize=14, fontweight='bold')
     
@@ -217,15 +235,36 @@ def visualize_results(stats: Statistics, config: SimulationConfig,
     ax3.legend()
     ax3.grid(True, alpha=0.3)
     
-    # Plot 4: Summary Statistics (Text)
+    # Plot 4: Server Utilization Over Time
     ax4 = axes[1, 1]
-    ax4.axis('off')
+    if stats.utilization_times:
+        ax4.plot(stats.utilization_times, stats.utilization_values, 
+                'g-', alpha=0.7, linewidth=1)
+        ax4.fill_between(stats.utilization_times, stats.utilization_values, 
+                        alpha=0.3, color='green')
+        avg_utilization = sum(stats.utilization_values) / len(stats.utilization_values)
+        ax4.axhline(y=avg_utilization, color='r', linestyle='--',
+                   label=f"Avg: {avg_utilization:.3f}")
+        ax4.set_xlabel('Time')
+        ax4.set_ylabel('Utilization (Busy Servers / Total Servers)')
+        ax4.set_title('Server Utilization Over Time')
+        ax4.set_ylim(-0.05, 1.05)
+        ax4.legend()
+        ax4.grid(True, alpha=0.3)
+    
+    # Plot 5: Summary Statistics (Text)
+    ax5 = axes[2, 0]
+    ax5.axis('off')
     
     # Calculate theoretical values for M/M/c queue
     lambda_rate = config.arrival_rate
     mu_rate = config.service_rate
     c = config.num_servers
     rho = lambda_rate / (c * mu_rate)  # Traffic intensity
+    
+    # Calculate actual average utilization from monitoring
+    actual_utilization = (sum(stats.utilization_values) / len(stats.utilization_values) 
+                         if stats.utilization_values else 0)
     
     summary_text = f"""
     SIMULATION PARAMETERS
@@ -249,12 +288,16 @@ def visualize_results(stats: Statistics, config: SimulationConfig,
     
     SYSTEM METRICS
     Traffic Intensity (ρ): {rho:.3f}
-    System Utilization: {rho * 100:.1f}%
+    Theoretical Utilization: {rho * 100:.1f}%
+    Actual Avg Utilization: {actual_utilization * 100:.1f}%
     """
     
-    ax4.text(0.1, 0.95, summary_text, transform=ax4.transAxes, 
+    ax5.text(0.1, 0.95, summary_text, transform=ax5.transAxes, 
              fontsize=10, verticalalignment='top', fontfamily='monospace',
              bbox=dict(boxstyle='round', facecolor='lightgray', alpha=0.5))
+    
+    # Hide the empty subplot
+    axes[2, 1].axis('off')
     
     plt.tight_layout()
     plt.savefig(output_file, dpi=150, bbox_inches='tight')

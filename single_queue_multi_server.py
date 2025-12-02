@@ -35,10 +35,6 @@ class Statistics:
     wait_times: list = field(default_factory=list)
     queue_lengths: list = field(default_factory=list)
     queue_times: list = field(default_factory=list)
-    server_busy_time: list = field(default_factory=list)
-    
-    def __post_init__(self):
-        self.server_busy_time = []
 
 
 class QueueSimulation:
@@ -61,7 +57,6 @@ class QueueSimulation:
         self.config = config
         self.servers = simpy.Resource(env, capacity=config.num_servers)
         self.stats = Statistics()
-        self.stats.server_busy_time = [0.0] * config.num_servers
         self.customer_count = 0
     
     def customer(self, customer_id: int):
@@ -169,7 +164,7 @@ def calculate_metrics(stats: Statistics, config: SimulationConfig,
 
 
 def visualize_results(stats: Statistics, config: SimulationConfig, 
-                      metrics: dict):
+                      metrics: dict, output_file: str = 'simulation_results.png'):
     """
     Create visualizations of the simulation results.
     
@@ -177,6 +172,7 @@ def visualize_results(stats: Statistics, config: SimulationConfig,
         stats: Collected statistics from simulation
         config: Simulation configuration
         metrics: Calculated metrics dictionary
+        output_file: Path to save the visualization image
     """
     fig, axes = plt.subplots(2, 2, figsize=(14, 10))
     fig.suptitle(f'Single Queue, {config.num_servers} Servers Simulation Results',
@@ -261,10 +257,10 @@ def visualize_results(stats: Statistics, config: SimulationConfig,
              bbox=dict(boxstyle='round', facecolor='lightgray', alpha=0.5))
     
     plt.tight_layout()
-    plt.savefig('simulation_results.png', dpi=150, bbox_inches='tight')
+    plt.savefig(output_file, dpi=150, bbox_inches='tight')
     plt.close()
     
-    print("\nVisualization saved to 'simulation_results.png'")
+    print(f"\nVisualization saved to '{output_file}'")
 
 
 def print_summary(metrics: dict, config: SimulationConfig):

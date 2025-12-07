@@ -19,7 +19,10 @@ def customer(env, name, server, service_time):
         # Wait in queue
         yield request
         wait_time = env.now - arrival_time
-        print(f'{env.now:.2f}: {name} enters service (waited {wait_time:.2f})')
+        print(
+            f'{env.now:.2f}: {name} enters service '
+            f'(waited {wait_time:.2f})'
+        )
         
         # Being served
         yield env.timeout(service_time)
@@ -27,16 +30,21 @@ def customer(env, name, server, service_time):
 
 def customer_generator(env, server, arrival_rate, service_rate):
     """
-    Generates customers arriving at the queue with specific arrival and service rates."""
+    Generates customers arriving at the queue with specific arrival
+    and service rates.
+    """
 
     customer_count = 0
     while True:
-        # Wait for next arrival (exponentially distributed inter-arrival time)
+        # Wait for next arrival (exponentially distributed)
         yield env.timeout(random.expovariate(arrival_rate))
      
         # Create and start customer process
         customer_count += 1
-        env.process(customer(env, f'Customer {customer_count}', server, random.expovariate(service_rate))) # Pass service_time here
+        service_time = random.expovariate(service_rate)
+        env.process(
+            customer(env, f'Customer {customer_count}', server, service_time)
+        )
 
 
 ARRIVAL_RATE = 1.0  # Average number of arrivals per time unit (lambda)
@@ -52,4 +60,3 @@ env.process(customer_generator(env, server, ARRIVAL_RATE, SERVICE_RATE))
 
 # Run simulation
 env.run(until=SIMULATION_TIME)
-

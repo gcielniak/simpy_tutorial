@@ -192,7 +192,7 @@ def visualize_results(stats: Statistics, config: SimulationConfig,
         metrics: Calculated metrics dictionary
         output_file: Path to save the visualization image
     """
-    fig, axes = plt.subplots(3, 2, figsize=(14, 14))
+    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
     fig.suptitle(f'Single Queue, {config.num_servers} Servers Simulation Results',
                  fontsize=14, fontweight='bold')
     
@@ -222,39 +222,26 @@ def visualize_results(stats: Statistics, config: SimulationConfig,
     ax2.legend()
     ax2.grid(True, alpha=0.3)
     
-    # Plot 3: Wait Time Over Time
+    # Plot 3: Server Utilization Over Time
     ax3 = axes[1, 0]
-    arrival_times = [q[0] for q in stats.queue_times]
-    wait_times = [q[1] for q in stats.queue_times]
-    ax3.scatter(arrival_times, wait_times, alpha=0.5, s=10, c='steelblue')
-    ax3.set_xlabel('Arrival Time')
-    ax3.set_ylabel('Wait Time')
-    ax3.set_title('Wait Time vs Arrival Time')
-    ax3.axhline(y=metrics['avg_wait_time'], color='r', linestyle='--',
-                label=f"Avg: {metrics['avg_wait_time']:.2f}")
-    ax3.legend()
-    ax3.grid(True, alpha=0.3)
-    
-    # Plot 4: Server Utilization Over Time
-    ax4 = axes[1, 1]
     if stats.utilization_times:
-        ax4.plot(stats.utilization_times, stats.utilization_values, 
+        ax3.plot(stats.utilization_times, stats.utilization_values, 
                 'g-', alpha=0.7, linewidth=1)
-        ax4.fill_between(stats.utilization_times, stats.utilization_values, 
+        ax3.fill_between(stats.utilization_times, stats.utilization_values, 
                         alpha=0.3, color='green')
         avg_utilization = sum(stats.utilization_values) / len(stats.utilization_values)
-        ax4.axhline(y=avg_utilization, color='r', linestyle='--',
+        ax3.axhline(y=avg_utilization, color='r', linestyle='--',
                    label=f"Avg: {avg_utilization:.3f}")
-        ax4.set_xlabel('Time')
-        ax4.set_ylabel('Utilization (Busy Servers / Total Servers)')
-        ax4.set_title('Server Utilization Over Time')
-        ax4.set_ylim(-0.05, 1.05)
-        ax4.legend()
-        ax4.grid(True, alpha=0.3)
+        ax3.set_xlabel('Time')
+        ax3.set_ylabel('Utilization (Busy Servers / Total Servers)')
+        ax3.set_title('Server Utilization Over Time')
+        ax3.set_ylim(-0.05, 1.05)
+        ax3.legend()
+        ax3.grid(True, alpha=0.3)
     
-    # Plot 5: Summary Statistics (Text)
-    ax5 = axes[2, 0]
-    ax5.axis('off')
+    # Plot 4: Summary Statistics (Text)
+    ax4 = axes[1, 1]
+    ax4.axis('off')
     
     # Calculate theoretical values for M/M/c queue
     lambda_rate = config.arrival_rate
@@ -292,12 +279,9 @@ def visualize_results(stats: Statistics, config: SimulationConfig,
     Actual Avg Utilization: {actual_utilization * 100:.1f}%
     """
     
-    ax5.text(0.1, 0.95, summary_text, transform=ax5.transAxes, 
+    ax4.text(0.1, 0.95, summary_text, transform=ax4.transAxes, 
              fontsize=10, verticalalignment='top', fontfamily='monospace',
              bbox=dict(boxstyle='round', facecolor='lightgray', alpha=0.5))
-    
-    # Hide the empty subplot
-    axes[2, 1].axis('off')
     
     plt.tight_layout()
     plt.savefig(output_file, dpi=150, bbox_inches='tight')
@@ -331,10 +315,10 @@ def main():
     """Main function to run the simulation."""
     # Create configuration
     config = SimulationConfig(
-        num_servers=3,
-        arrival_rate=5.0,
+        num_servers=1,
+        arrival_rate=1.0,
         service_rate=2.0,
-        simulation_time=100.0,
+        simulation_time=60.0,
         random_seed=42
     )
     

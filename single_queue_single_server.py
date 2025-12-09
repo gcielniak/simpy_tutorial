@@ -65,7 +65,7 @@ def customer_generator(env, server, arrival_rate, service_rate, stats):
 
 def monitor(env, server, stats, interval=0.1):
     """
-    Monitor server utilization over time.
+    Monitor server utilisation over time.
     
     Args:
         env: SimPy environment
@@ -74,27 +74,27 @@ def monitor(env, server, stats, interval=0.1):
         interval: Time interval between samples
     """
     while True:
-        # Record current time and server utilization
+        # Record current time and server utilisation
         stats['times'].append(env.now)
         # Server is busy if count > 0 (capacity - count = number busy)
-        utilization = 1 if server.count > 0 else 0
-        stats['utilization'].append(utilization)
+        utilisation = 1 if server.count > 0 else 0
+        stats['utilisation'].append(utilisation)
         
         yield env.timeout(interval)
 
 
-def plot_utilization(stats):
+def plot_utilisation(stats):
     """
-    Plot server utilization over time.
+    Plot server utilisation over time.
     
     Args:
         stats: Dictionary containing simulation statistics
     """
     plt.figure(figsize=(10, 6))
-    plt.step(stats['times'], stats['utilization'], where='post', linewidth=2)
+    plt.step(stats['times'], stats['utilisation'], where='post', linewidth=2)
     plt.xlabel('Time')
-    plt.ylabel('Server Utilization')
-    plt.title('Server Utilization Over Time')
+    plt.ylabel('Server Utilisation')
+    plt.title('Server Utilisation Over Time')
     plt.ylim(-0.1, 1.1)
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
@@ -113,7 +113,7 @@ def run_simulation():
     print('=' * 50)
     print(f'Arrival rate (λ): {ARRIVAL_RATE}')
     print(f'Service rate (μ): {SERVICE_RATE}')
-    print(f'Utilization (ρ): {ARRIVAL_RATE/SERVICE_RATE:.2f}')
+    print(f'Utilisation (ρ): {ARRIVAL_RATE/SERVICE_RATE:.2f}')
     print('=' * 50)
     
     # Set random seed for reproducibility
@@ -126,7 +126,7 @@ def run_simulation():
     # Initialize statistics
     stats = {
         'times': [],
-        'utilization': []
+        'utilisation': []
     }
     
     # Start monitoring and customer generation processes
@@ -139,13 +139,13 @@ def run_simulation():
     print('=' * 50)
     print('Simulation complete')
     
-    # Calculate and display average utilization
-    avg_utilization = sum(stats['utilization']) / len(stats['utilization'])
-    print(f'Average server utilization: {avg_utilization:.3f}')
+    # Calculate and display average utilisation
+    avg_utilisation = sum(stats['utilisation']) / len(stats['utilisation'])
+    print(f'Average server utilisation: {avg_utilisation:.3f}')
     print('=' * 50)
     
     # Plot results
-    plot_utilization(stats)
+    plot_utilisation(stats)
 
 
 if __name__ == '__main__':

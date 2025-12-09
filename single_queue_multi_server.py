@@ -7,10 +7,10 @@ This script simulates an M/M/c queueing system where:
 - Multiple servers process customers from the queue
 - Service times follow an exponential distribution
 
-The simulation tracks and visualizes key performance metrics:
+The simulation tracks and visualises key performance metrics:
 - Queue length over time
 - Customer waiting times
-- Server utilization
+- Server utilisation
 """
 
 import random
@@ -35,8 +35,8 @@ class Statistics:
     wait_times: list = field(default_factory=list)
     queue_lengths: list = field(default_factory=list)
     queue_times: list = field(default_factory=list)
-    utilization_times: list = field(default_factory=list)
-    utilization_values: list = field(default_factory=list)
+    utilisation_times: list = field(default_factory=list)
+    utilisation_values: list = field(default_factory=list)
 
 
 class QueueSimulation:
@@ -109,19 +109,19 @@ class QueueSimulation:
             queue_length = len(self.servers.queue)
             self.stats.queue_lengths.append((self.env.now, queue_length))
     
-    def monitor_utilization(self, interval: float = 0.1):
+    def monitor_utilisation(self, interval: float = 0.1):
         """
-        Periodically monitor and record server utilization.
+        Periodically monitor and record server utilisation.
         
         Args:
             interval: Time between monitoring events
         """
         while True:
-            # Calculate utilization: number of busy servers / total servers
+            # Calculate utilisation: number of busy servers / total servers
             busy_servers = self.servers.count
-            utilization = busy_servers / self.config.num_servers
-            self.stats.utilization_times.append(self.env.now)
-            self.stats.utilization_values.append(utilization)
+            utilisation = busy_servers / self.config.num_servers
+            self.stats.utilisation_times.append(self.env.now)
+            self.stats.utilisation_values.append(utilisation)
             yield self.env.timeout(interval)
 
 
@@ -145,7 +145,7 @@ def run_simulation(config: SimulationConfig) -> tuple:
     # Start processes
     env.process(simulation.customer_arrivals())
     env.process(simulation.monitor_queue())
-    env.process(simulation.monitor_utilization())
+    env.process(simulation.monitor_utilisation())
     
     # Run simulation
     env.run(until=config.simulation_time)
@@ -175,22 +175,22 @@ def calculate_metrics(stats: Statistics, config: SimulationConfig,
                            len(stats.queue_lengths) if stats.queue_lengths else 0,
         'max_queue_length': max(q[1] for q in stats.queue_lengths) 
                            if stats.queue_lengths else 0,
-        'utilization': config.arrival_rate / (config.num_servers * 
+        'utilisation': config.arrival_rate / (config.num_servers * 
                                               config.service_rate),
     }
     return metrics
 
 
-def visualize_results(stats: Statistics, config: SimulationConfig, 
+def visualise_results(stats: Statistics, config: SimulationConfig, 
                       metrics: dict, output_file: str = 'simulation_results.png'):
     """
-    Create visualizations of the simulation results.
+    Create visualisations of the simulation results.
     
     Args:
         stats: Collected statistics from simulation
         config: Simulation configuration
         metrics: Calculated metrics dictionary
-        output_file: Path to save the visualization image
+        output_file: Path to save the visualisation image
     """
     fig, axes = plt.subplots(2, 2, figsize=(14, 10))
     fig.suptitle(f'Single Queue, {config.num_servers} Servers Simulation Results',
@@ -222,19 +222,19 @@ def visualize_results(stats: Statistics, config: SimulationConfig,
     ax2.legend()
     ax2.grid(True, alpha=0.3)
     
-    # Plot 3: Server Utilization Over Time
+    # Plot 3: Server Utilisation Over Time
     ax3 = axes[1, 0]
-    if stats.utilization_times:
-        ax3.plot(stats.utilization_times, stats.utilization_values, 
+    if stats.utilisation_times:
+        ax3.plot(stats.utilisation_times, stats.utilisation_values, 
                 'g-', alpha=0.7, linewidth=1)
-        ax3.fill_between(stats.utilization_times, stats.utilization_values, 
+        ax3.fill_between(stats.utilisation_times, stats.utilisation_values, 
                         alpha=0.3, color='green')
-        avg_utilization = sum(stats.utilization_values) / len(stats.utilization_values)
-        ax3.axhline(y=avg_utilization, color='r', linestyle='--',
-                   label=f"Avg: {avg_utilization:.3f}")
+        avg_utilisation = sum(stats.utilisation_values) / len(stats.utilisation_values)
+        ax3.axhline(y=avg_utilisation, color='r', linestyle='--',
+                   label=f"Avg: {avg_utilisation:.3f}")
         ax3.set_xlabel('Time')
-        ax3.set_ylabel('Utilization (Busy Servers / Total Servers)')
-        ax3.set_title('Server Utilization Over Time')
+        ax3.set_ylabel('Utilisation (Busy Servers / Total Servers)')
+        ax3.set_title('Server Utilisation Over Time')
         ax3.set_ylim(-0.05, 1.05)
         ax3.legend()
         ax3.grid(True, alpha=0.3)
@@ -249,9 +249,9 @@ def visualize_results(stats: Statistics, config: SimulationConfig,
     c = config.num_servers
     rho = lambda_rate / (c * mu_rate)  # Traffic intensity
     
-    # Calculate actual average utilization from monitoring
-    actual_utilization = (sum(stats.utilization_values) / len(stats.utilization_values) 
-                         if stats.utilization_values else 0)
+    # Calculate actual average utilisation from monitoring
+    actual_utilisation = (sum(stats.utilisation_values) / len(stats.utilisation_values) 
+                         if stats.utilisation_values else 0)
     
     summary_text = f"""
     SIMULATION PARAMETERS
@@ -275,8 +275,8 @@ def visualize_results(stats: Statistics, config: SimulationConfig,
     
     SYSTEM METRICS
     Traffic Intensity (ρ): {rho:.3f}
-    Theoretical Utilization: {rho * 100:.1f}%
-    Actual Avg Utilization: {actual_utilization * 100:.1f}%
+    Theoretical Utilisation: {rho * 100:.1f}%
+    Actual Avg Utilisation: {actual_utilisation * 100:.1f}%
     """
     
     ax4.text(0.1, 0.95, summary_text, transform=ax4.transAxes, 
@@ -287,7 +287,7 @@ def visualize_results(stats: Statistics, config: SimulationConfig,
     plt.savefig(output_file, dpi=150, bbox_inches='tight')
     plt.close()
     
-    print(f"\nVisualization saved to '{output_file}'")
+    print(f"\nVisualisation saved to '{output_file}'")
 
 
 def print_summary(metrics: dict, config: SimulationConfig):
@@ -307,7 +307,7 @@ def print_summary(metrics: dict, config: SimulationConfig):
     print(f"  - Maximum wait time: {metrics['max_wait_time']:.3f} time units")
     print(f"  - Average queue length: {metrics['avg_queue_length']:.2f} customers")
     print(f"  - Maximum queue length: {metrics['max_queue_length']} customers")
-    print(f"  - System utilization: {metrics['utilization']*100:.1f}%")
+    print(f"  - System utilisation: {metrics['utilisation']*100:.1f}%")
     print("="*60 + "\n")
 
 
@@ -335,8 +335,8 @@ def main():
     # Print summary
     print_summary(metrics, config)
     
-    # Visualize results
-    visualize_results(stats, config, metrics)
+    # Visualise results
+    visualise_results(stats, config, metrics)
     
     print("Simulation complete!")
 
